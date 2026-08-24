@@ -1,0 +1,31 @@
+%PDF-1.4
+1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj
+2 0 obj <</Type /Pages /Kids [3 0 R] /Count 1>> endobj
+3 0 obj <</Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R>> endobj
+4 0 obj <</Type /Font /Subtype /Type1 /BaseFont /Helvetica>> endobj
+5 0 obj <</Length 650>> stream
+BT /F1 16 Tf 50 740 Td (Sample RAG System & AI Guide) Tj ET
+BT /F1 10 Tf 50 710 Td (1. Retrieval-Augmented Generation Overview) Tj ET
+BT /F1 10 Tf 50 690 Td (RAG enables Large Language Models to answer questions grounded in PDF documents.) Tj ET
+BT /F1 10 Tf 50 670 Td (2. Document Chunking Parameters) Tj ET
+BT /F1 10 Tf 50 650 Td (Documents are loaded via PyPDFLoader and split with RecursiveCharacterTextSplitter.) Tj ET
+BT /F1 10 Tf 50 630 Td (Chunk Size is 500 characters and Chunk Overlap is 50 characters.) Tj ET
+BT /F1 10 Tf 50 610 Td (3. Hugging Face Embeddings & ChromaDB) Tj ET
+BT /F1 10 Tf 50 590 Td (Text chunks are embedded using all-MiniLM-L6-v2 into 384-dimensional vectors.) Tj ET
+BT /F1 10 Tf 50 570 Td (ChromaDB persists vector data locally in ./chroma_db directory.) Tj ET
+BT /F1 10 Tf 50 550 Td (4. Retrieval Top K and Google Gemini Answer) Tj ET
+BT /F1 10 Tf 50 530 Td (Similarity search retrieves Top K = 3 matching context chunks for Google Gemini LLM.) Tj ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000062 00000 n 
+0000000117 00000 n 
+0000000242 00000 n 
+0000000315 00000 n 
+trailer <</Size 6 /Root 1 0 R>>
+startxref
+1020
+%%EOF

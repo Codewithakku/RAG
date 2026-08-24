@@ -1,0 +1,37 @@
+# Python Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python Cache & Compiled Files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Node.js / Frontend
+node_modules/
+dist/
+build/
+.npm
+*.log
+
+# Environment Variables & Secrets
+.env
+!.env.example
+
+# Vector Store & Local Storage
+chroma_db/
+test_chroma_db/
+backend/chroma_db/
+backend/test_chroma_db/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
