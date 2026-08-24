@@ -1,175 +1,188 @@
 # 🧠 RAG PDF Intelligence Studio
 
-A full-stack **Retrieval-Augmented Generation (RAG)** application for question-answering over PDF documents using **LangChain**, **ChromaDB**, **Hugging Face Embeddings (`all-MiniLM-L6-v2`)**, **Google Gemini (`gemini-3.6-flash`)**, **FastAPI**, and a **React (Vite)** Glassmorphism UI.
+A full-stack **Retrieval-Augmented Generation (RAG)** application for question-answering over PDF documents using **LangChain**, **ChromaDB**, **Hugging Face Embeddings**, **Google Gemini**, **FastAPI**, and **React (Vite)**.
 
 ---
 
-## 🌟 Key Features & Specifications
+## 🌟 Key Features
 
-- 📄 **PDF Processing**: Upload, update, delete, and list PDF documents (`PyPDFLoader` + `pypdf` fallback).
-- ✂️ **Recursive Chunking**: Configured with `Chunk Size = 500` characters and `Chunk Overlap = 50` characters.
-- 🔤 **Dense Vector Embeddings**: Hugging Face `all-MiniLM-L6-v2` embedding model (384-dimensional vector space).
-- 🗄️ **Local Vector Database**: Persistent local ChromaDB database stored in `./backend/chroma_db`.
-- 🔍 **Similarity Search**: Top `K = 3` context chunk retrieval using cosine vector similarity.
-- 🤖 **Google Gemini LLM**: Context-grounded response generation using `gemini-3.6-flash` via `ChatGoogleGenerativeAI`.
-- 🎨 **Modern React UI**: Built with Vite, Tailwind/Glassmorphism dark theme, document manager, query console, and settings modal.
+- 📄 Upload, update, delete PDF documents
+- ✂️ Auto chunking (Size: 500, Overlap: 50)
+- 🔤 HuggingFace `all-MiniLM-L6-v2` embeddings
+- 🗄️ Local ChromaDB vector database
+- 🔍 Top-K similarity search
+- 🤖 Google Gemini LLM answers
+- 🎨 Modern React Glassmorphism UI
 
 ---
 
-## 📁 Repository Structure
+## 📁 Project Structure
 
 ```
 RAG-code/
-├── README.md                 # Setup guide and instructions for running on any machine
-├── .gitignore                # Git ignore rules for node_modules, venv, and local db
-├── create_sample_pdf.py      # Utility script to generate a sample testing PDF file
+├── setup.bat               ← Run this FIRST on new computer (Windows)
+├── start_app.bat           ← Run this to START the app (Windows)
+├── docker-compose.yml      ← Run with Docker (any OS)
 ├── backend/
-│   ├── main.py               # FastAPI REST API endpoints
-│   ├── requirements.txt      # Python backend dependencies
-│   ├── .env.example          # Sample environment configuration
+│   ├── main.py             ← FastAPI server
+│   ├── requirements.txt    ← Python packages
+│   ├── .env.example        ← Copy this to .env and add API key
 │   └── app/
-│       ├── config.py         # App configuration settings
-│       ├── document_processor.py # PDF Loading & Recursive Character Splitting (500/50)
-│       ├── embeddings.py     # Hugging Face all-MiniLM-L6-v2 embeddings
-│       ├── vector_store.py   # ChromaDB Vector Store & Document Management
-│       └── rag_chain.py      # Gemini LLM + Simple RAG Prompt Pipeline
+│       ├── config.py
+│       ├── document_processor.py
+│       ├── embeddings.py
+│       ├── vector_store.py
+│       └── rag_chain.py
 └── frontend/
-    ├── package.json          # React & Vite dependencies
-    ├── vite.config.js        # Vite config with backend API proxy
-    ├── index.html            # Main HTML file
+    ├── package.json        ← Node.js packages
+    ├── vite.config.js      ← Vite + API proxy config
     └── src/
-        ├── index.css         # Modern glassmorphic theme styling
-        ├── App.jsx           # Main React layout
+        ├── App.jsx
         └── components/
-            ├── Header.jsx          # Specs badges & settings trigger
-            ├── DocumentManager.jsx # PDF Upload, Update, Delete & List
-            ├── QueryConsole.jsx    # Question input, Top K selector & Gemini Answer
-            └── SettingsModal.jsx   # Gemini API Key & Model Configuration
 ```
 
 ---
 
-## 💻 Step-by-Step Setup Guide (Running on a Second Computer)
-
-Follow these step-by-step instructions to set up and run this application on any computer.
-
-### Prerequisites
-
-- **Git**
-- **Python** (version 3.10 or higher)
-- **Node.js** (version 18 or higher)
-- **Google Gemini API Key** ([Get your API key from Google AI Studio](https://aistudio.google.com/))
+## 🚀 How to Run (3 Methods)
 
 ---
 
-### Step 1: Clone the Repository
+### ✅ Method 1: Windows One-Click (Easiest)
 
-Open your terminal or command prompt and clone the repository:
+> **Prerequisites:** Install [Python 3.10+](https://python.org) and [Node.js 18+](https://nodejs.org) only
 
+**Step 1 — Clone the repo:**
 ```bash
 git clone https://github.com/Codewithakku/RAG.git
 cd RAG
 ```
 
----
+**Step 2 — Run setup (only ONCE on new computer):**
+```
+Double-click: setup.bat
+```
+This will:
+- ✅ Check Python & Node.js
+- ✅ Create Python virtual environment
+- ✅ Install all Python packages (`pip install -r requirements.txt`)
+- ✅ Install Node packages (`npm install`)
+- ✅ Open `.env` file for you to add API key
 
-### Step 2: Set Up Python Backend
+**Step 3 — Add your Gemini API Key in `backend/.env`:**
+```env
+GOOGLE_API_KEY=your_actual_gemini_api_key_here
+```
+> Get free API key from: https://aistudio.google.com/
 
-1. **Navigate to backend directory**:
-
-   ```bash
-   cd backend
-   ```
-
-2. **Create a Python Virtual Environment**:
-   - **Windows**:
-     ```powershell
-     python -m venv venv
-     .\venv\Scripts\activate
-     ```
-   - **macOS / Linux**:
-     ```bash
-     python3 -m venv venv
-     source venv/bin/activate
-     ```
-
-3. **Install Python Dependencies**:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure Environment Variables**:
-   Create a `.env` file in the `backend/` directory by copying `.env.example`:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Open `.env` and add your Google Gemini API Key:
-
-   ```env
-   GOOGLE_API_KEY=your_actual_gemini_api_key_here
-   GEMINI_MODEL=gemini-3.6-flash
-   CHROMA_DB_DIR=./chroma_db
-   CHUNK_SIZE=500
-   CHUNK_OVERLAP=50
-   TOP_K=3
-   EMBEDDING_MODEL=all-MiniLM-L6-v2
-   ```
-
-5. **Start the FastAPI Backend Server**:
-   ```bash
-   python -m uvicorn main:app --reload --port 8000
-   ```
-   _The backend will start running on `http://localhost:8000`._
+**Step 4 — Start the app:**
+```
+Double-click: start_app.bat
+```
+Browser will open automatically at **http://localhost:5173** 🎉
 
 ---
 
-### Step 3: Set Up React Frontend
+### 🐳 Method 2: Docker (Any OS — Windows/Mac/Linux)
 
-1. **Open a new terminal window** and navigate to the `frontend/` directory:
+> **Prerequisites:** Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) only
 
-   ```bash
-   cd RAG/frontend
-   ```
+**Step 1 — Clone the repo:**
+```bash
+git clone https://github.com/Codewithakku/RAG.git
+cd RAG
+```
 
-2. **Install Node Dependencies**:
+**Step 2 — Create `.env` file:**
+```bash
+cp backend/.env.example backend/.env
+# Open backend/.env and add your GOOGLE_API_KEY
+```
 
-   ```bash
-   npm install
-   ```
+**Step 3 — Run with Docker:**
+```bash
+docker-compose up --build
+```
 
-3. **Start the Vite Frontend Development Server**:
-   ```bash
-   npm run dev
-   ```
-   _The frontend will start running on `http://localhost:5173`._
+Open browser: **http://localhost:5173** 🎉
+
+**Stop the app:**
+```bash
+docker-compose down
+```
 
 ---
 
-### Step 4: Open and Test the Application
+### 🛠️ Method 3: Manual Setup (Any OS)
 
-1. Open your browser and navigate to **[http://localhost:5173](http://localhost:5173)**.
-2. In the **Document Storage Manager** panel on the left, upload any PDF document (or run `python create_sample_pdf.py` in the root folder to generate `sample_rag_guide.pdf`).
-3. In the **RAG Query Console** on the right, type your question (e.g. _"What is the chunk size?"_) and click **Ask Gemini**.
-4. The system will perform Similarity Search (Top K = 3) on ChromaDB, inject the context into `gemini-3.6-flash`, and return a context-grounded response alongside matching source chunks!
+**Prerequisites:**
+- Python 3.10+
+- Node.js 18+
+- Google Gemini API Key
+
+**Terminal 1 — Backend:**
+```bash
+git clone https://github.com/Codewithakku/RAG.git
+cd RAG/backend
+
+# Create virtual environment
+python -m venv venv
+
+# Activate (Windows)
+venv\Scripts\activate
+# Activate (Mac/Linux)
+source venv/bin/activate
+
+# Install packages
+pip install -r requirements.txt
+
+# Setup .env
+cp .env.example .env
+# Add your GOOGLE_API_KEY in .env
+
+# Start backend
+python main.py
+```
+
+**Terminal 2 — Frontend:**
+```bash
+cd RAG/frontend
+npm install
+npm run dev
+```
+
+Open browser: **http://localhost:5173** 🎉
 
 ---
 
-## 📡 API Endpoints Summary
+## 📡 API Endpoints
 
-| Method   | Endpoint                  | Description                                                                       |
-| :------- | :------------------------ | :-------------------------------------------------------------------------------- |
-| `GET`    | `/api/health`             | Health status and API key configuration check                                     |
-| `GET`    | `/api/documents`          | List indexed PDF documents and chunk counts in ChromaDB                           |
-| `POST`   | `/api/documents/upload`   | Upload PDF file -> chunk (500/50) -> embed (`all-MiniLM-L6-v2`) -> store ChromaDB |
-| `PUT`    | `/api/documents/{doc_id}` | Re-upload PDF -> update document chunks in ChromaDB                               |
-| `DELETE` | `/api/documents/{doc_id}` | Delete document and chunks from ChromaDB                                          |
-| `POST`   | `/api/query`              | Retrieve Top K (3) context chunks -> run Gemini LLM -> return answer & sources    |
+| Method   | Endpoint                  | Description                        |
+| :------- | :------------------------ | :--------------------------------- |
+| `GET`    | `/api/health`             | Health check & API key status      |
+| `GET`    | `/api/documents`          | List all indexed PDFs              |
+| `POST`   | `/api/documents/upload`   | Upload & index a PDF               |
+| `PUT`    | `/api/documents/{doc_id}` | Update an existing PDF             |
+| `DELETE` | `/api/documents/{doc_id}` | Delete a PDF from vector store     |
+| `POST`   | `/api/query`              | Ask a question (RAG query)         |
+
+- **API Docs (Swagger):** http://localhost:8000/docs
+
+---
+
+## ⚙️ Environment Variables (`backend/.env`)
+
+| Variable          | Description                          | Default              |
+| :---------------- | :----------------------------------- | :------------------- |
+| `GOOGLE_API_KEY`  | **Required** — Google Gemini API Key | -                    |
+| `GEMINI_MODEL`    | Gemini model to use                  | `gemini-2.0-flash`   |
+| `CHROMA_DB_DIR`   | ChromaDB storage path                | `./chroma_db`        |
+| `CHUNK_SIZE`      | PDF chunk size (characters)          | `500`                |
+| `CHUNK_OVERLAP`   | Chunk overlap                        | `50`                 |
+| `TOP_K`           | Number of chunks for similarity search | `3`                |
+| `EMBEDDING_MODEL` | HuggingFace embedding model          | `all-MiniLM-L6-v2`  |
 
 ---
 
 ## 📄 License
 
-MIT License. Free to use and modify for educational and production purposes.
+MIT License — Free to use for educational and production purposes.
