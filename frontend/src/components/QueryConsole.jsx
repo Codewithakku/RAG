@@ -21,35 +21,27 @@ export default function QueryConsole({ onQuery, loading, hasKey }) {
   };
 
   return (
-    <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      
+    <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-6 flex flex-col gap-5">
+
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bot size={20} color="var(--cyan-accent)" />
+          <h2 className="text-lg font-semibold flex items-center gap-2 text-white">
+            <Bot size={20} className="text-cyan-400" />
             RAG Query Console
           </h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <p className="text-xs text-slate-400">
             Context-based Similarity Search + Google Gemini LLM
           </p>
         </div>
 
         {/* Top K Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Top K Chunks:</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-400">Top K Chunks:</span>
           <select
             value={topK}
             onChange={(e) => setTopK(Number(e.target.value))}
-            style={{
-              background: 'rgba(0,0,0,0.3)',
-              color: 'var(--text-main)',
-              border: '1px solid var(--border-glow)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '4px 8px',
-              fontSize: '0.85rem',
-              outline: 'none'
-            }}
+            className="bg-black/30 text-white border border-white/15 rounded-md px-2 py-1 text-sm outline-none"
           >
             <option value={1}>K = 1</option>
             <option value={3}>K = 3 (Default)</option>
@@ -59,25 +51,14 @@ export default function QueryConsole({ onQuery, loading, hasKey }) {
       </div>
 
       {/* Query Form */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ position: 'relative' }}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <div className="relative">
           <textarea
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Ask a question based on your uploaded PDF documents..."
             rows={3}
-            style={{
-              width: '100%',
-              background: 'rgba(0, 0, 0, 0.25)',
-              border: '1px solid var(--border-glow)',
-              borderRadius: 'var(--radius-md)',
-              padding: '14px',
-              color: 'var(--text-main)',
-              fontSize: '0.95rem',
-              fontFamily: 'var(--font-body)',
-              outline: 'none',
-              resize: 'none'
-            }}
+            className="w-full bg-black/25 border border-white/15 rounded-lg p-3.5 pb-14 text-white text-[0.95rem] outline-none resize-none placeholder:text-slate-500"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -87,18 +68,11 @@ export default function QueryConsole({ onQuery, loading, hasKey }) {
           />
           <button
             type="submit"
-            className="btn-primary"
             disabled={loading || !question.trim()}
-            style={{
-              position: 'absolute',
-              right: '12px',
-              bottom: '12px',
-              padding: '8px 16px',
-              fontSize: '0.85rem'
-            }}
+            className="absolute right-3 bottom-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
           >
             {loading ? (
-              <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+              <Loader2 size={16} className="animate-spin" />
             ) : (
               <>
                 <Send size={15} />
@@ -111,84 +85,52 @@ export default function QueryConsole({ onQuery, loading, hasKey }) {
 
       {/* Error message */}
       {error && (
-        <div style={{
-          padding: '12px 16px',
-          background: 'rgba(244, 63, 94, 0.15)',
-          border: '1px solid rgba(244, 63, 94, 0.3)',
-          borderRadius: 'var(--radius-md)',
-          color: 'var(--rose-accent)',
-          fontSize: '0.85rem'
-        }}>
+        <div className="px-4 py-3 bg-rose-950 border border-rose-800 rounded-lg text-rose-400 text-sm">
           {error}
         </div>
       )}
 
       {/* Answer & Sources Display */}
       {result && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
-          
+        <div className="flex flex-col gap-4 mt-2">
+
           {/* Answer Card */}
-          <div style={{
-            background: 'rgba(99, 102, 241, 0.06)',
-            border: '1px solid rgba(99, 102, 241, 0.25)',
-            borderRadius: 'var(--radius-md)',
-            padding: '20px',
-            position: 'relative'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--primary-accent)', fontWeight: 600, fontSize: '0.9rem' }}>
+          <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg p-5 relative">
+            <div className="flex items-center gap-2 mb-3 text-indigo-400 font-semibold text-sm">
               <Sparkles size={18} />
               Gemini Answer (Context-Based)
             </div>
 
-            <p style={{ lineHeight: '1.6', fontSize: '0.95rem', whiteSpace: 'pre-wrap', color: 'var(--text-main)' }}>
+            <p className="leading-relaxed text-[0.95rem] whitespace-pre-wrap text-white">
               {result.answer}
             </p>
           </div>
 
           {/* Retrieved Context Sources (Top K = 3) */}
           {result.sources && result.sources.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              
+            <div className="flex flex-col gap-2.5">
+
               <button
                 onClick={() => setShowSources(!showSources)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  width: 'fit-content'
-                }}
+                className="bg-transparent border-none text-slate-400 flex items-center gap-1.5 text-sm font-semibold cursor-pointer w-fit hover:text-slate-300 transition-colors"
               >
-                <BookOpen size={15} color="var(--cyan-accent)" />
+                <BookOpen size={15} className="text-cyan-400" />
                 Retrieved Context Chunks ({result.sources.length} matching top k={topK})
                 {showSources ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
               </button>
 
               {showSources && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div className="flex flex-col gap-2.5">
                   {result.sources.map((src, idx) => (
                     <div
                       key={idx}
-                      style={{
-                        background: 'rgba(0, 0, 0, 0.25)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '12px 14px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px'
-                      }}
+                      className="bg-black/25 border border-white/10 rounded-lg px-3.5 py-3 flex flex-col gap-1.5"
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', color: 'var(--cyan-accent)' }}>
-                        <span style={{ fontWeight: 600 }}>Chunk #{idx + 1} — {src.source_file}</span>
-                        <span style={{ background: 'rgba(6, 182, 212, 0.15)', padding: '2px 8px', borderRadius: '4px' }}>Page {src.page}</span>
+                      <div className="flex justify-between items-center text-xs text-cyan-400">
+                        <span className="font-semibold">Chunk #{idx + 1} — {src.source_file}</span>
+                        <span className="bg-cyan-950 px-2 py-0.5 rounded">Page {src.page}</span>
                       </div>
-                      <p style={{ fontSize: '0.83rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', lineHeight: '1.4', background: 'rgba(0,0,0,0.3)', padding: '8px 10px', borderRadius: '6px' }}>
+                      <p className="text-sm text-slate-400 font-mono leading-snug bg-black/30 px-2.5 py-2 rounded-md">
                         "{src.content}"
                       </p>
                     </div>

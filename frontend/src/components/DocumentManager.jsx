@@ -2,34 +2,9 @@ import React, { useState } from 'react';
 import { UploadCloud, FileText, Trash2, RefreshCw, Layers, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function DocumentManager({ documents, onUpload, onUpdate, onDelete, loading }) {
-  const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [updatingDocId, setUpdatingDocId] = useState(null);
   const [statusMessage, setStatusMessage] = useState(null);
-
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type === 'application/pdf') {
-        setSelectedFile(file);
-      } else {
-        setStatusMessage({ type: 'error', text: 'Only PDF files are allowed.' });
-      }
-    }
-  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -72,94 +47,91 @@ export default function DocumentManager({ documents, onUpload, onUpdate, onDelet
     setStatusMessage(null);
   };
 
+  const statusStyles = {
+    error: 'bg-rose-500/15 border-rose-500/30 text-rose-400',
+    success: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
+    info: 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400',
+  };
+
   return (
-    <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 flex flex-col gap-5">
+
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FileText size={18} color="var(--primary-accent)" />
+          <h2 className="text-lg font-semibold flex items-center gap-2 text-white">
+            <FileText size={18} className="text-indigo-400" />
             Document Storage Manager
           </h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <p className="text-xs text-slate-400">
             PyPDFLoader • RecursiveCharacterTextSplitter (500 / 50)
           </p>
         </div>
-        <div className="badge badge-info">
+        <div className="text-xs font-medium px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 whitespace-nowrap">
           {documents.length} PDF{documents.length !== 1 ? 's' : ''} Indexed
         </div>
       </div>
 
       {/* Status Alert Banner */}
       {statusMessage && (
-        <div style={{
-          padding: '12px 16px',
-          borderRadius: 'var(--radius-md)',
-          fontSize: '0.85rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          background: statusMessage.type === 'error' ? 'rgba(244,63,94,0.15)' : statusMessage.type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(6,182,212,0.15)',
-          border: `1px solid ${statusMessage.type === 'error' ? 'rgba(244,63,94,0.3)' : statusMessage.type === 'success' ? 'rgba(16,185,129,0.3)' : 'rgba(6,182,212,0.3)'}`,
-          color: statusMessage.type === 'error' ? 'var(--rose-accent)' : statusMessage.type === 'success' ? 'var(--emerald-accent)' : 'var(--cyan-accent)'
-        }}>
+        <div
+          className={`px-4 py-3 rounded-lg text-sm flex items-center gap-2.5 border ${statusStyles[statusMessage.type] || statusStyles.info}`}
+        >
           {statusMessage.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
-          <span style={{ flex: 1 }}>{statusMessage.text}</span>
+          <span className="flex-1">{statusMessage.text}</span>
           {updatingDocId && (
-            <button className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }} onClick={cancelUpdate}>
+            <button
+              className="px-2 py-0.5 text-xs rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+              onClick={cancelUpdate}
+            >
               Cancel Update
             </button>
           )}
         </div>
       )}
 
-      {/* Drag & Drop Upload Zone */}
-      <div
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-        style={{
-          border: `2px dashed ${dragActive ? 'var(--primary-accent)' : 'rgba(255,255,255,0.15)'}`,
-          background: dragActive ? 'rgba(99,102,241,0.08)' : 'rgba(0,0,0,0.2)',
-          borderRadius: 'var(--radius-md)',
-          padding: '24px 16px',
-          textAlign: 'center',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease'
-        }}
-      >
+      {/* File Select Zone (no drag-and-drop, click to browse only) */}
+      <div className="rounded-lg border-2 border-dashed border-white/15 bg-black/20 p-6 text-center">
         <input
           type="file"
           accept=".pdf"
           id="pdf-upload-input"
-          style={{ display: 'none' }}
+          className="hidden"
           onChange={handleFileChange}
         />
-        
-        <label htmlFor="pdf-upload-input" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-          <UploadCloud size={36} color={updatingDocId ? 'var(--secondary-accent)' : 'var(--primary-accent)'} />
+
+        <label
+          htmlFor="pdf-upload-input"
+          className="cursor-pointer flex flex-col items-center gap-2"
+        >
+          <UploadCloud
+            size={36}
+            className={updatingDocId ? 'text-purple-400' : 'text-indigo-400'}
+          />
           <div>
-            <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>
-              {selectedFile ? selectedFile.name : updatingDocId ? 'Click to select replacement PDF' : 'Drop your PDF here, or browse'}
+            <p className="font-semibold text-sm text-white">
+              {selectedFile
+                ? selectedFile.name
+                : updatingDocId
+                ? 'Click to select replacement PDF'
+                : 'Click to browse and select a PDF'}
             </p>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+            <p className="text-[0.78rem] text-slate-400 mt-1">
               Supports PDF files only • Chunks auto-generated at 500 size / 50 overlap
             </p>
           </div>
         </label>
 
         {selectedFile && (
-          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '12px' }}>
+          <div className="mt-4 flex justify-center gap-3">
             <button
-              className="btn-primary"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
               onClick={handleUploadSubmit}
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 size={16} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
+                  <Loader2 size={16} className="animate-spin" />
                   Processing PDF...
                 </>
               ) : updatingDocId ? (
@@ -170,7 +142,7 @@ export default function DocumentManager({ documents, onUpload, onUpdate, onDelet
               ) : (
                 <>
                   <UploadCloud size={16} />
-                  Add & Index Document
+                  Add &amp; Index Document
                 </>
               )}
             </button>
@@ -179,51 +151,41 @@ export default function DocumentManager({ documents, onUpload, onUpdate, onDelet
       </div>
 
       {/* Indexed Document List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <div className="flex flex-col gap-3">
+        <h3 className="text-sm text-slate-400 uppercase tracking-wide">
           Indexed Vector Documents ({documents.length})
         </h3>
 
         {documents.length === 0 ? (
-          <div style={{ padding: '24px', textAlign: 'center', background: 'rgba(0,0,0,0.15)', borderRadius: 'var(--radius-md)', color: 'var(--text-dim)', fontSize: '0.85rem' }}>
+          <div className="p-6 text-center bg-black/15 rounded-lg text-slate-500 text-sm">
             No documents in vector storage. Upload a PDF to start similarity search.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '320px', overflowY: 'auto' }}>
+          <div className="flex flex-col gap-2.5 max-h-80 overflow-y-auto">
             {documents.map((doc) => (
               <div
                 key={doc.doc_id}
-                style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '12px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px'
-                }}
+                className="bg-white/[0.03] border border-white/10 rounded-lg px-3.5 py-3 flex items-center justify-between gap-3"
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
-                  <FileText size={20} color="var(--cyan-accent)" style={{ flexShrink: 0 }} />
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
+                  <FileText size={20} className="text-cyan-400 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-white truncate">
                       {doc.source_file}
                     </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
+                      <span className="flex items-center gap-1">
                         <Layers size={12} /> {doc.chunk_count} Chunks
                       </span>
                       <span>•</span>
-                      <span style={{ fontFamily: 'var(--font-mono)' }}>ID: {doc.doc_id.substring(0, 8)}...</span>
+                      <span className="font-mono">ID: {doc.doc_id.substring(0, 8)}...</span>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
-                    className="btn-secondary"
-                    style={{ padding: '5px 8px', fontSize: '0.75rem' }}
+                    className="inline-flex items-center gap-1 px-2 py-1.5 text-xs rounded-md bg-white/10 hover:bg-white/20 text-white transition-colors"
                     onClick={() => startUpdate(doc)}
                     title="Update PDF Document"
                   >
@@ -231,7 +193,7 @@ export default function DocumentManager({ documents, onUpload, onUpdate, onDelet
                     Update
                   </button>
                   <button
-                    className="btn-danger"
+                    className="inline-flex items-center justify-center p-1.5 rounded-md bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 transition-colors"
                     onClick={() => onDelete(doc.doc_id)}
                     title="Delete Document & Chunks"
                   >

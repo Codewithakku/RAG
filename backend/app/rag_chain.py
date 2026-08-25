@@ -38,9 +38,9 @@ class RAGChainManager:
         key = custom_api_key or self.api_key
         model = custom_model or self.model_name
 
-        # Map deprecated model names to gemini-3.6-flash
-        if model in ["gemini-pro", "models/gemini-pro", "gemini-2.0-flash", "models/gemini-2.0-flash"]:
-            model = "gemini-3.6-flash"
+        # Map deprecated/legacy model names to a stable default.
+        if model in ["gemini-pro", "models/gemini-pro", "gemini-2.0-flash", "models/gemini-2.0-flash", "gemini-3.6-flash", "models/gemini-3.6-flash"]:
+            model = "gemini-1.5-flash"
         
         if not key:
             raise ValueError("Google Gemini API Key is missing. Please click Settings to enter your API key or set GOOGLE_API_KEY env variable.")

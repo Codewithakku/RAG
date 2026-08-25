@@ -23,7 +23,7 @@ EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 TOP_K = int(os.getenv("TOP_K", 3))
 
 # Google Gemini Configuration
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
 # Ensure required directories exist
 os.makedirs(CHROMA_DB_DIR, exist_ok=True)

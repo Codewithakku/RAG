@@ -12,24 +12,36 @@ class VectorStoreManager:
     def __init__(self, persist_directory: str = CHROMA_DB_DIR, collection_name: str = "rag_documents"):
         self.persist_directory = persist_directory
         self.collection_name = collection_name
+        self.embedding_function = None
+        self.vector_store = None
+
+    def _ensure_vector_store(self) -> None:
+        """
+        Lazily initialize embeddings and Chroma collection.
+        This avoids long blocking model loads during FastAPI import/startup.
+        """
+        if self.vector_store is not None:
+            return
+
         self.embedding_function = get_embedding_model()
-        
         self.vector_store = Chroma(
             collection_name=self.collection_name,
             embedding_function=self.embedding_function,
-            persist_directory=self.persist_directory
+            persist_directory=self.persist_directory,
         )
 
     def add_documents(self, documents: List[Document]) -> List[str]:
         """Adds document chunks to ChromaDB store."""
         if not documents:
             return []
+        self._ensure_vector_store()
         ids = [f"{doc.metadata.get('doc_id')}_{i}" for i, doc in enumerate(documents)]
         return self.vector_store.add_documents(documents=documents, ids=ids)
 
     def delete_document(self, doc_id: str) -> bool:
         """Deletes all chunks associated with a doc_id from ChromaDB."""
         try:
+            self._ensure_vector_store()
             # Query collection directly to get chunk IDs matching doc_id
             collection = self.vector_store._collection
             results = collection.get(where={"doc_id": doc_id})
@@ -54,6 +66,7 @@ class VectorStoreManager:
     def list_documents(self) -> List[Dict[str, Any]]:
         """Lists all distinct documents stored in ChromaDB along with chunk counts."""
         try:
+            self._ensure_vector_store()
             collection = self.vector_store._collection
             results = collection.get(include=["metadatas"])
             
@@ -78,4 +91,5 @@ class VectorStoreManager:
 
     def similarity_search(self, query: str, k: int = TOP_K) -> List[Document]:
         """Performs similarity search against ChromaDB and returns top k relevant chunks."""
+        self._ensure_vector_store()
         return self.vector_store.similarity_search(query=query, k=k)
