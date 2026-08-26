@@ -253,7 +253,7 @@ export default function App() {
 
       {/* Settings Modal */}
       <SettingsModal
-        isOpen={isSettingsOpen}
+        isOpen={isSettingsOpen}                        //isSettingsOpen is a boolean
         onClose={() => setIsSettingsOpen(false)}
         currentModel={userSettings.model}
         currentApiKey={userSettings.apiKey}

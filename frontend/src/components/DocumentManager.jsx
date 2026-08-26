@@ -104,7 +104,8 @@ export default function DocumentManager({ documents, onUpload, onUpdate, onDelet
           htmlFor="pdf-upload-input"
           className="cursor-pointer flex flex-col items-center gap-2"
         >
-          <UploadCloud
+          // UploadCloud is a icon
+          <UploadCloud   
             size={36}
             className={updatingDocId ? 'text-purple-400' : 'text-indigo-400'}
           />

@@ -1,6 +1,5 @@
 import os
 import uuid
-import shutil
 from typing import Optional, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -101,6 +100,7 @@ async def upload_document(file: UploadFile = File(...)):
         print(f"Error processing PDF upload: {str(e)}")
         raise HTTPException(status_code=500, detail=f"PDF Error: {str(e)}")
 
+# put : update document
 @app.put("/api/documents/{doc_id}")
 async def update_document(doc_id: str, file: UploadFile = File(...)):
     """Updates an existing document by re-processing new PDF and replacing chunks in ChromaDB."""
