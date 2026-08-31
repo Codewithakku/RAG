@@ -11,25 +11,24 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Get valid Gemini model from localStorage
-  const getInitialModel = () => {
-    const saved = localStorage.getItem('gemini_model');
+const getInitialModel = () => {
+  const saved = localStorage.getItem('gemini_model');
 
-    const validModels = [
-      'gemini-2.5-flash',
-      'gemini-2.5-flash-lite',
-      'gemini-2.5-pro',
-      'gemini-3.6-flash',
-    ];
+  const validModels = [
+    'gemini-3.7-flash',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+  ];
 
-    // If no model or old/invalid model is saved,
-    // use gemini-2.5-flash as default
-    if (!saved || !validModels.includes(saved)) {
-      localStorage.setItem('gemini_model', 'gemini-2.5-flash');
-      return 'gemini-2.5-flash';
-    }
+  // If no model or old/invalid model is saved,
+  // use gemini-3.7-flash as default
+  if (!saved || !validModels.includes(saved)) {
+    localStorage.setItem('gemini_model', 'gemini-3.7-flash');
+    return 'gemini-3.7-flash';
+  }
 
-    return saved;
-  };
+  return saved;
+};
 
   const [userSettings, setUserSettings] = useState({
     model: getInitialModel(),
