@@ -116,6 +116,21 @@ class QueryRequest(BaseModel):
 
     metadata_filter: Optional[Dict[str, Any]] = None
 
+    # --------------------------------------------------------
+    # Optional file type filter (Phase 3)
+    # --------------------------------------------------------
+
+    file_type: Optional[str] = None
+
+
+# ============================================================
+# Index Strategy
+# ============================================================
+
+@app.get("/api/index-strategy")
+def get_index_strategy():
+    return vector_store.get_index_strategy()
+
 
 # ============================================================
 # Health Check
@@ -508,11 +523,9 @@ def query_rag(
 
             custom_model=request.gemini_model,
 
-            # ------------------------------------------------
-            # Pass metadata filter to RAG pipeline
-            # ------------------------------------------------
+            metadata_filter=request.metadata_filter,
 
-            metadata_filter=request.metadata_filter
+            file_type=request.file_type
         )
 
         return result

@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
@@ -7,21 +8,15 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
 
-from sentence_transformers import CrossEncoder
-
 from app.config import GEMINI_MODEL
 from app.vector_store import VectorStoreManager
 
 
 # ============================================================
-# Re-ranking Configuration
+# Top-K Retrieval Configuration
 # ============================================================
 
-INITIAL_RETRIEVAL_K = 10
-
-RERANK_K = 3
-
-RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"
+TOP_K = 3
 
 
 # ============================================================
@@ -43,7 +38,7 @@ RAG_PROMPT_TEMPLATE = """
 You are a helpful AI assistant. Answer clearly, accurately, and concisely.
 
 Source rules:
-- PDF question → use {context} only; never guess. If unavailable, reply exactly: "I cannot find the answer in the provided documents context."
+- Document question → use {context} only; never guess. If unavailable, reply exactly: "I cannot find the answer in the provided documents context."
 - General question → use general knowledge.
 - Date/time → use {current_date}, {current_time}.
 - Weather → use {weather_context}.
@@ -55,7 +50,7 @@ Time: {current_time}
 Weather:
 {weather_context}
 
-PDF Context:
+Document Context:
 {context}
 
 Question:
@@ -71,19 +66,15 @@ class RAGChainManager:
 
         Question
             ↓
-        Metadata Filter (optional)
+        Metadata Filter (optional, incl. file_type)
             ↓
         ChromaDB Similarity Search
             ↓
-        Retrieve 10 candidate chunks
-            ↓
-        Cross-Encoder Re-ranking
-            ↓
-        Select best 3 chunks
+        Top-K Documents
             ↓
         Gemini LLM
             ↓
-        Final Answer
+        Final Answer (+ index strategy + performance timings)
     """
 
     def __init__(
@@ -108,10 +99,6 @@ class RAGChainManager:
         )
 
         self.output_parser = StrOutputParser()
-
-        self.reranker = CrossEncoder(
-            RERANKER_MODEL
-        )
 
     # ========================================================
     # Create Gemini LLM
@@ -150,118 +137,98 @@ class RAGChainManager:
         )
 
     # ========================================================
-    # Re-rank Documents
-    # ========================================================
-
-    def _rerank_documents(
-        self,
-        question: str,
-        documents: List[Document],
-        top_k: int = RERANK_K
-    ) -> List[Dict[str, Any]]:
-
-        if not documents:
-            return []
-
-        top_k = min(
-            top_k,
-            len(documents)
-        )
-
-        pairs = [
-            [question, document.page_content]
-            for document in documents
-        ]
-
-        scores = self.reranker.predict(
-            pairs
-        )
-
-        scored_documents = [
-            {
-                "document": document,
-                "score": float(score)
-            }
-            for document, score in zip(
-                documents,
-                scores
-            )
-        ]
-
-        scored_documents.sort(
-            key=lambda item: item["score"],
-            reverse=True
-        )
-
-        return scored_documents[:top_k]
-
-    # ========================================================
     # Generate Answer
     # ========================================================
 
     def generate_answer(
         self,
         question: str,
-        k: int = RERANK_K,
+        k: int = TOP_K,
         custom_api_key: str = None,
         custom_model: str = None,
-        metadata_filter: Optional[Dict[str, Any]] = None
+        metadata_filter: Optional[Dict[str, Any]] = None,
+        file_type: Optional[str] = None
     ) -> Dict[str, Any]:
 
+        timings = {}
+
+        total_start = time.perf_counter()
+
         # ====================================================
-        # 1. Initial Retrieval
+        # 0. Merge file_type into metadata filter
         # ====================================================
+
+        combined_filter = (
+            dict(metadata_filter)
+            if metadata_filter
+            else {}
+        )
+
+        if file_type:
+            combined_filter["file_type"] = file_type
+
+        combined_filter = combined_filter or None
+
+        # ====================================================
+        # 0.5 Capture index strategy for this query
+        # ====================================================
+
+        strategy_start = time.perf_counter()
+
+        strategy_info = (
+            self.vector_store_manager
+            .get_index_strategy()
+        )
+
+        timings["index_strategy_check_sec"] = round(
+            time.perf_counter() - strategy_start,
+            4
+        )
+
+        # ====================================================
+        # 1. Top-K Similarity Retrieval
+        # ====================================================
+
+        retrieval_start = time.perf_counter()
 
         retrieved_docs: List[Document] = (
             self.vector_store_manager.similarity_search(
                 query=question,
-                k=INITIAL_RETRIEVAL_K,
-                metadata_filter=metadata_filter
+                k=k,
+                metadata_filter=combined_filter
             )
         )
 
-        # ====================================================
-        # 2. Re-ranking
-        # ====================================================
-
-        reranked_results = self._rerank_documents(
-            question=question,
-            documents=retrieved_docs,
-            top_k=k
+        timings["retrieval_sec"] = round(
+            time.perf_counter() - retrieval_start,
+            4
         )
 
         # ====================================================
-        # 3. Extract Final Documents
+        # 2. Use Retrieved Top-K Documents Directly
         # ====================================================
 
-        docs = [
-            result["document"]
-            for result in reranked_results
-        ]
+        docs = retrieved_docs
 
         # ====================================================
-        # 4. Format PDF Context
+        # 3. Format Context
         # ====================================================
 
         context_snippets = []
 
         sources = []
 
-        for result in reranked_results:
-
-            doc = result["document"]
-
-            rerank_score = result["score"]
+        for doc in docs:
 
             source_file = doc.metadata.get(
                 "source_file",
-                "Unknown PDF"
+                "Unknown source"
             )
 
-            page_num = doc.metadata.get(
-                "page",
-                0
-            ) + 1
+            doc_file_type = doc.metadata.get(
+                "file_type",
+                ""
+            )
 
             doc_id = doc.metadata.get(
                 "doc_id",
@@ -270,8 +237,23 @@ class RAGChainManager:
 
             content = doc.page_content.strip()
 
+            if "page" in doc.metadata:
+
+                location_tag = (
+                    f"Page {doc.metadata['page'] + 1}"
+                )
+
+            else:
+
+                location_tag = (
+                    f"Chunk "
+                    f"{doc.metadata.get('chunk_index', '?')}"
+                )
+
             snippet = (
-                f"[Source: {source_file}, Page {page_num}]\n"
+                f"[Source: {source_file} "
+                f"({doc_file_type}), "
+                f"{location_tag}]\n"
                 f"{content}"
             )
 
@@ -281,30 +263,32 @@ class RAGChainManager:
 
             sources.append({
                 "source_file": source_file,
-                "page": page_num,
+                "file_type": doc_file_type,
+                "location": location_tag,
                 "doc_id": doc_id,
-                "content": content,
-                "rerank_score": rerank_score
+                "content": content
             })
 
         # ====================================================
-        # 5. Create Formatted Context
+        # 4. Create Formatted Context
         # ====================================================
 
         if context_snippets:
 
-            formatted_context = "\n\n---\n\n".join(
-                context_snippets
+            formatted_context = (
+                "\n\n---\n\n".join(
+                    context_snippets
+                )
             )
 
         else:
 
             formatted_context = (
-                "No relevant PDF context was retrieved."
+                "No relevant document context was retrieved."
             )
 
         # ====================================================
-        # 6. Current Date and Time
+        # 5. Current Date and Time
         # ====================================================
 
         now = datetime.now()
@@ -318,7 +302,7 @@ class RAGChainManager:
         )
 
         # ====================================================
-        # 7. Weather
+        # 6. Weather
         # ====================================================
 
         weather_context = (
@@ -326,8 +310,10 @@ class RAGChainManager:
         )
 
         # ====================================================
-        # 8. Gemini
+        # 7. Gemini
         # ====================================================
+
+        gemini_start = time.perf_counter()
 
         try:
 
@@ -353,8 +339,23 @@ class RAGChainManager:
         except Exception as e:
 
             response_text = (
-                f"Error communicating with Gemini LLM: {str(e)}"
+                f"Error communicating with Gemini LLM: "
+                f"{str(e)}"
             )
+
+        timings["gemini_sec"] = round(
+            time.perf_counter() - gemini_start,
+            4
+        )
+
+        # ====================================================
+        # 8. Total Time
+        # ====================================================
+
+        timings["total_sec"] = round(
+            time.perf_counter() - total_start,
+            4
+        )
 
         # ====================================================
         # 9. Return Final Response
@@ -363,5 +364,7 @@ class RAGChainManager:
         return {
             "answer": response_text,
             "sources": sources,
-            "context_used": formatted_context
+            "context_used": formatted_context,
+            "index_strategy": strategy_info,
+            "performance": timings
         }

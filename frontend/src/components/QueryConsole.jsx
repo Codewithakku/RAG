@@ -35,18 +35,31 @@ export default function QueryConsole({ onQuery, loading, hasKey }) {
           </p>
         </div>
 
-        {/* Top K Selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-400">Top K Chunks:</span>
-          <select
-            value={topK}
-            onChange={(e) => setTopK(Number(e.target.value))}
-            className="bg-black/30 text-white border border-white/15 rounded-md px-2 py-1 text-sm outline-none"
-          >
-            <option value={1}>K = 1</option>
-            <option value={3}>K = 3 (Default)</option>
-            <option value={5}>K = 5</option>
-          </select>
+        <div className="flex items-center gap-3 flex-wrap">
+
+          {/* Index Strategy Badge (Phase 4) */}
+          {result?.index_strategy && (
+            <div className="flex items-center gap-1.5 bg-black/30 border border-white/15 rounded-md px-2.5 py-1 text-xs text-slate-300">
+              <Layers size={13} className="text-emerald-400" />
+              Index: <span className="text-emerald-400 font-semibold">{result.index_strategy.index_strategy}</span>
+              <span className="text-slate-500">({result.index_strategy.total_chunks} chunks)</span>
+            </div>
+          )}
+
+          {/* Top K Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-400">Top K Chunks:</span>
+            <select
+              value={topK}
+              onChange={(e) => setTopK(Number(e.target.value))}
+              className="bg-black/30 text-white border border-white/15 rounded-md px-2 py-1 text-sm outline-none"
+            >
+              <option value={1}>K = 1</option>
+              <option value={3}>K = 3 (Default)</option>
+              <option value={5}>K = 5</option>
+            </select>
+          </div>
+
         </div>
       </div>
 
@@ -106,6 +119,18 @@ export default function QueryConsole({ onQuery, loading, hasKey }) {
             </p>
           </div>
 
+          {/* Performance Timing (Phase 5) */}
+          {result.performance && (
+            <div className="text-xs text-slate-500 flex flex-wrap gap-3 px-1">
+              <span>Retrieval: {result.performance.retrieval_sec}s</span>
+              <span>Rerank: {result.performance.rerank_sec}s</span>
+              <span>Gemini: {result.performance.gemini_sec}s</span>
+              <span className="text-slate-300 font-semibold">
+                Total: {result.performance.total_sec}s
+              </span>
+            </div>
+          )}
+
           {/* Retrieved Context Sources (Top K = 3) */}
           {result.sources && result.sources.length > 0 && (
             <div className="flex flex-col gap-2.5">
@@ -128,7 +153,7 @@ export default function QueryConsole({ onQuery, loading, hasKey }) {
                     >
                       <div className="flex justify-between items-center text-xs text-cyan-400">
                         <span className="font-semibold">Chunk #{idx + 1} — {src.source_file}</span>
-                        <span className="bg-cyan-950 px-2 py-0.5 rounded">Page {src.page}</span>
+                        <span className="bg-cyan-950 px-2 py-0.5 rounded">{src.location}</span>
                       </div>
                       <p className="text-sm text-slate-400 font-mono leading-snug bg-black/30 px-2.5 py-2 rounded-md">
                         "{src.content}"
